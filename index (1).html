@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>LeetTrack — My DSA Journey</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Clash+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & ROOT ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07070e;
+  --s1:#0f0f1a;
+  --s2:#161624;
+  --s3:#1e1e30;
+  --s4:#26263c;
+  --border:#2a2a42;
+  --border2:#36364e;
+  --text:#eeeef5;
+  --text2:#8888aa;
+  --text3:#4a4a6a;
+  --easy:#00e5a0;
+  --easy-dim:#00e5a018;
+  --med:#ffaa00;
+  --med-dim:#ffaa0018;
+  --hard:#ff3d5a;
+  --hard-dim:#ff3d5a18;
+  --acc:#6e5ff5;
+  --acc2:#ff5fa0;
+  --acc3:#00c8ff;
+  --mono:'JetBrains Mono',monospace;
+  --display:'Clash Display',sans-serif;
+  --radius:10px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden;max-width:100vw}
+
+/* ── NOISE OVERLAY ── */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");opacity:.4;pointer-events:none;z-index:0}
+
+/* ── GLOW BLOBS — clamped so they don't overflow on mobile ── */
+.blob{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;opacity:.10}
+.blob1{width:min(400px,80vw);height:min(400px,80vw);background:var(--acc);top:-100px;left:-100px}
+.blob2{width:min(350px,70vw);height:min(350px,70vw);background:var(--acc2);bottom:-100px;right:-100px}
+.blob3{width:min(280px,60vw);height:min(280px,60vw);background:var(--acc3);top:40%;left:30%}
+
+/* ── TOPBAR ── */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(7,7,14,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.logo{font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:-1px;display:flex;align-items:center;gap:4px;flex-shrink:0}
+.logo-leet{color:var(--text)}
+.logo-track{color:var(--acc)}
+.logo-dot{width:6px;height:6px;background:var(--easy);border-radius:50%;margin-left:2px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.topbar-right{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.topbar-right::-webkit-scrollbar{display:none}
+.stat-chip{background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px;flex-shrink:0;white-space:nowrap;cursor:pointer;transition:border-color .15s}
+.stat-chip:hover{border-color:var(--border2)}
+.stat-chip.clickable-solved:hover{border-color:var(--acc);color:var(--text)}
+.stat-chip b{color:var(--text);font-weight:600}
+.add-btn{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:opacity .2s;letter-spacing:.3px;flex-shrink:0;white-space:nowrap}
+.add-btn:hover{opacity:.85}
+.sync-btn{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-family:var(--mono);font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s;flex-shrink:0;white-space:nowrap}
+.sync-btn:hover{border-color:var(--border2);color:var(--text)}
+.sync-btn.syncing .sync-icon{animation:spin 1s linear infinite}
+.sync-btn.synced{color:var(--easy);border-color:var(--easy)40}
+.sync-btn.error{color:var(--hard);border-color:var(--hard)40}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Google auth btn */
+.gauth-btn{background:var(--s3);border:1px solid var(--border2);border-radius:8px;padding:6px 11px;font-family:var(--mono);font-size:11px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;flex-shrink:0;white-space:nowrap}
+.gauth-btn:hover{border-color:var(--acc);color:var(--text)}
+.gauth-btn.signed-in{color:var(--easy);border-color:var(--easy)40}
+.gauth-avatar{width:20px;height:20px;border-radius:50%;object-fit:cover;border:1px solid var(--easy)60}
+
+/* ── HERO ── */
+.hero{position:relative;z-index:1;padding:28px 16px 22px;border-bottom:1px solid var(--border)}
+.hero-title{font-family:var(--display);font-size:clamp(24px,5vw,36px);font-weight:700;letter-spacing:-1.5px;line-height:1.1;margin-bottom:10px}
+.hero-title .hi{color:var(--text3);font-size:12px;font-family:var(--mono);letter-spacing:2px;display:block;margin-bottom:6px;font-weight:400}
+.hero-title .name{background:linear-gradient(135deg,var(--acc),var(--acc2),var(--acc3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{color:var(--text2);font-size:12px;margin-bottom:20px;line-height:1.6}
+.progress-section{max-width:500px}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:6px}
+.progress-label span{color:var(--easy);font-weight:600}
+.progress-track{height:4px;background:var(--s3);border-radius:4px;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1);width:0%}
+.hero-stats{display:flex;gap:16px;margin-top:18px;flex-wrap:wrap}
+.hstat{display:flex;flex-direction:column;gap:2px}
+.hstat-val{font-family:var(--display);font-size:clamp(20px,4vw,28px);font-weight:700;letter-spacing:-1px}
+.hstat-label{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:220px 1fr;position:relative;z-index:1;min-height:calc(100vh - 56px)}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--s1);border-right:1px solid var(--border);position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;display:flex;flex-direction:column}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-track{background:transparent}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.sb-search{padding:12px 12px 6px}
+.sb-search input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;transition:border-color .2s}
+.sb-search input::placeholder{color:var(--text3)}
+.sb-search input:focus{border-color:var(--acc)}
+.sb-label{padding:8px 14px 4px;font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
+.sb-btn{width:100%;text-align:left;background:none;border:none;border-left:2px solid transparent;padding:8px 14px;font-family:var(--mono);font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all .15s;gap:8px}
+.sb-btn:hover{color:var(--text);background:var(--s2)}
+.sb-btn.active{color:var(--text);background:var(--s2);border-left-color:var(--acc)}
+.sb-btn-inner{display:flex;align-items:center;gap:8px;min-width:0}
+.sb-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sb-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-cnt{font-size:10px;color:var(--text3);flex-shrink:0}
+.sb-divider{height:1px;background:var(--border);margin:6px 12px}
+
+/* ── CONTENT ── */
+.content{padding:20px 20px;overflow-y:auto}
+.content-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.content-title{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-0.5px}
+.filter-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.diff-btn{background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-family:var(--mono);font-size:11px;color:var(--text2);cursor:pointer;transition:all .15s}
+.diff-btn:hover{border-color:var(--border2);color:var(--text)}
+.diff-btn.active{border-color:var(--acc);color:var(--text);background:var(--s3)}
+
+/* ── PATTERN GROUP ── */
+.pat-group{margin-bottom:18px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)}
+.pat-group-header{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none;transition:background .15s}
+.pat-group-header:hover{filter:brightness(1.1)}
+.pat-group-name{font-family:var(--display);font-size:14px;font-weight:600;color:#fff;flex:1}
+.pat-group-meta{display:flex;align-items:center;gap:10px}
+.pat-solved{font-size:11px;font-weight:600}
+.pat-chevron{font-size:10px;color:rgba(255,255,255,.5);transition:transform .2s}
+.pat-chevron.open{transform:rotate(180deg)}
+.pat-problems{border-top:1px solid rgba(255,255,255,.06)}
+.pat-problems.collapsed{display:none}
+
+/* ── PROBLEM ROW ── */
+.prob-row{display:grid;grid-template-columns:48px 1fr 80px 40px 36px;align-items:center;border-bottom:1px solid var(--border);background:var(--s1);transition:background .12s}
+.prob-row:last-child{border-bottom:none}
+.prob-row:hover{background:var(--s2)}
+.prob-row.is-solved{opacity:.6}
+.prob-num{font-size:11px;color:var(--text3);text-align:center;padding:12px 0;font-weight:500}
+.prob-main{padding:12px 8px;display:flex;align-items:center;gap:8px;min-width:0}
+.prob-check{width:17px;height:17px;border-radius:50%;border:1.5px solid var(--border2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .2s;background:transparent}
+.prob-check:hover{border-color:var(--easy)}
+.prob-check.checked{background:var(--easy);border-color:var(--easy);color:#000;font-weight:700}
+.prob-link{color:var(--text);text-decoration:none;font-size:13px;font-weight:500;transition:color .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prob-link:hover{color:var(--acc)}
+.diff-tag{font-size:10px;font-weight:600;padding:3px 8px;border-radius:12px;text-align:center;letter-spacing:.3px}
+.diff-tag.Easy{color:var(--easy);background:var(--easy-dim)}
+.diff-tag.Medium{color:var(--med);background:var(--med-dim)}
+.diff-tag.Hard{color:var(--hard);background:var(--hard-dim)}
+.note-toggle{width:40px;height:100%;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;transition:color .15s}
+.note-toggle:hover{color:var(--acc2)}
+.note-toggle.active{color:var(--acc2)}
+.del-btn{width:36px;height:100%;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;transition:color .15s;opacity:0}
+.prob-row:hover .del-btn{opacity:1}
+.del-btn:hover{color:var(--hard)}
+
+/* NOTE PANEL */
+.note-panel{background:var(--s2);border-top:1px solid var(--border);padding:12px 14px;display:none}
+.note-panel.open{display:block}
+.note-panel-inner{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.np-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:600}
+.np-area{width:100%;background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:9px;font-family:var(--mono);font-size:12px;color:var(--text);resize:vertical;min-height:90px;outline:none;line-height:1.7;transition:border-color .2s}
+.np-area:focus{border-color:var(--acc)}
+.np-area.cheat:focus{border-color:var(--acc2)}
+.np-save{margin-top:8px;background:var(--acc);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.np-save:hover{opacity:.85}
+.np-saved{color:var(--easy);font-size:11px;margin-left:8px;opacity:0;transition:opacity .3s}
+.np-saved.show{opacity:1}
+
+/* ── MODALS ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:500px;overflow:hidden;transform:translateY(20px);transition:transform .25s}
+.modal-bg.open .modal{transform:translateY(0)}
+.modal-head{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:var(--display);font-size:15px;font-weight:700}
+.modal-x{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background .15s}
+.modal-x:hover{background:var(--s3)}
+.modal-body{padding:18px 20px;max-height:60vh;overflow-y:auto}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.form-group{margin-bottom:12px}
+.form-label{font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:6px;font-weight:600}
+.form-input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--acc)}
+select.form-input option{background:var(--s2)}
+.form-hint{font-size:10px;color:var(--text3);margin-top:4px}
+.cpre{width:20px;height:20px;border-radius:50%;cursor:pointer;display:inline-block;border:2px solid transparent;transition:transform .15s,border-color .15s;flex-shrink:0}
+.cpre:hover{transform:scale(1.2);border-color:#fff5}
+#new-cat-fields{margin-top:4px;padding:12px;background:var(--s3);border-radius:8px;border:1px solid var(--border)}
+.modal-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{background:var(--s2);color:var(--text2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .15s}
+.btn-cancel:hover{color:var(--text)}
+.btn-confirm{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.btn-confirm:hover{opacity:.85}
+.btn-danger{background:var(--hard);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.btn-danger:hover{opacity:.85}
+
+/* ── SOLVED LIST MODAL ── */
+.solved-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.solved-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--border)}
+.solved-item a{color:var(--text);text-decoration:none;font-size:13px;font-weight:500;flex:1}
+.solved-item a:hover{color:var(--acc)}
+.solved-item-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3)}
+.solved-empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-text{font-size:14px}
+
+/* ── SCROLLBAR ── */
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-track{background:transparent}
+.content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.pat-group{animation:fadeIn .3s ease both}
+
+/* ── CONFIRM DIALOG ── */
+.confirm-modal .modal{max-width:380px}
+.confirm-msg{font-size:13px;line-height:1.7;color:var(--text2);padding:4px 0 8px}
+.confirm-name{color:var(--text);font-weight:600}
+
+/* ── MOBILE RESPONSIVE ── */
+@media(max-width:640px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:fixed;top:56px;left:0;width:260px;height:calc(100vh - 56px);z-index:90;transform:translateX(-100%);transition:transform .25s;border-right:1px solid var(--border)}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:89}
+  .sidebar-backdrop.active{display:block}
+  .content{padding:14px 12px}
+  .hero{padding:18px 12px 16px}
+  .topbar{padding:0 12px}
+  .prob-row{grid-template-columns:40px 1fr 70px 36px 30px}
+  .note-panel-inner{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .hero-stats{gap:12px}
+  .stat-chip.hide-mobile{display:none}
+  .hamburger{display:flex!important}
+}
+@media(min-width:641px){
+  .hamburger{display:none!important}
+  .sidebar-backdrop{display:none!important}
+}
+.hamburger{background:none;border:1px solid var(--border);border-radius:7px;width:34px;height:34px;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:16px;flex-shrink:0;transition:border-color .2s}
+.hamburger:hover{border-color:var(--acc);color:var(--text)}
+</style>
+</head>
+<body>
+
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+<div class="sidebar-backdrop" id="sb-backdrop" onclick="closeMobileSidebar()"></div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="hamburger" onclick="toggleMobileSidebar()">☰</button>
+    <div class="logo">
+      <span class="logo-leet">leet</span><span class="logo-track">track</span>
+      <span class="logo-dot"></span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="stat-chip hide-mobile">Total <b id="s-total">0</b></div>
+    <div class="stat-chip hide-mobile" style="color:var(--easy)">Easy <b id="s-easy">0</b></div>
+    <div class="stat-chip hide-mobile" style="color:var(--med)">Med <b id="s-med">0</b></div>
+    <div class="stat-chip hide-mobile" style="color:var(--hard)">Hard <b id="s-hard">0</b></div>
+    <div class="stat-chip clickable-solved" style="color:var(--acc)" onclick="openSolvedList()" title="Click to view all solved">✓ <b id="s-solved">0</b></div>
+    <button class="gauth-btn" id="gauth-btn" onclick="handleAuthClick()" title="Google Drive Sync">
+      <span id="gauth-icon">🔗</span>
+      <span id="gauth-label">Sign In</span>
+    </button>
+    <button onclick="openSettings()" class="sync-btn" style="background:var(--s3);border-color:var(--border2);">
+      <span>⚙️</span>
+    </button>
+    <button class="sync-btn" id="sync-btn" onclick="manualSync()" title="Sync with Google Drive">
+      <span class="sync-icon" id="sync-icon">☁</span>
+      <span id="sync-label" class="hide-mobile">Drive</span>
+    </button>
+    <button class="add-btn" onclick="openAdd()">+ Add</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-title">
+    <span class="hi">// MY DSA JOURNEY</span>
+    My <span class="name">LeetCode</span> Tracker
+  </div>
+  <div class="hero-sub">Your personal DSA tracker · Add your own problems · Notes & cheatsheets sync privately to your Google Drive</div>
+  <div class="progress-section">
+    <div class="progress-label"><span>Progress</span><span id="progress-pct">0% solved</span></div>
+    <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+  </div>
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-val" id="h-total" style="color:var(--acc)">0</span><span class="hstat-label">Total</span></div>
+    <div class="hstat"><span class="hstat-val" id="h-solved" style="color:var(--easy)">0</span><span class="hstat-label">Solved</span></div>
+    <div class="hstat"><span class="hstat-val" id="h-easy" style="color:var(--easy)">0</span><span class="hstat-label">Easy</span></div>
+    <div class="hstat"><span class="hstat-val" id="h-med" style="color:var(--med)">0</span><span class="hstat-label">Medium</span></div>
+    <div class="hstat"><span class="hstat-val" id="h-hard" style="color:var(--hard)">0</span><span class="hstat-label">Hard</span></div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="main-sidebar">
+    <div class="sb-search">
+      <input type="text" placeholder="Search patterns..." id="sb-search" oninput="renderSidebar()">
+    </div>
+    <div class="sb-label">Patterns</div>
+    <button class="sb-btn active" id="sb-all" onclick="setPattern('all',this);closeMobileSidebar()">
+      <span class="sb-btn-inner"><span class="sb-name">All Problems</span></span>
+      <span class="sb-cnt" id="sb-all-cnt">0</span>
+    </button>
+    <button class="sb-btn" id="sb-solved-btn" onclick="setPattern('__solved__',this);closeMobileSidebar()" style="color:var(--easy)">
+      <span class="sb-btn-inner"><span class="sb-dot" style="background:var(--easy)"></span><span class="sb-name">Solved ✓</span></span>
+      <span class="sb-cnt" id="sb-solved-cnt" style="color:var(--easy)">0</span>
+    </button>
+    <div class="sb-divider"></div>
+    <div id="sb-patterns"></div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="content-header">
+      <div class="content-title" id="content-title">All Problems</div>
+      <div class="filter-row">
+        <button class="diff-btn active" onclick="setDiff('all',this)">All</button>
+        <button class="diff-btn" onclick="setDiff('Easy',this)" style="color:var(--easy)">Easy</button>
+        <button class="diff-btn" onclick="setDiff('Medium',this)" style="color:var(--med)">Med</button>
+        <button class="diff-btn" onclick="setDiff('Hard',this)" style="color:var(--hard)">Hard</button>
+      </div>
+    </div>
+    <div id="content-body"></div>
+  </div>
+</div>
+
+<!-- ADD PROBLEM MODAL -->
+<div class="modal-bg" id="add-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Add New Problem</div>
+      <button class="modal-x" onclick="closeAdd()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Problem #</label>
+          <input class="form-input" id="add-id" type="number" placeholder="e.g. 146">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Difficulty</label>
+          <select class="form-input" id="add-diff">
+            <option>Easy</option><option selected>Medium</option><option>Hard</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Problem Name</label>
+        <input class="form-input" id="add-name" placeholder="e.g. LRU Cache">
+      </div>
+      <div class="form-group">
+        <label class="form-label">LeetCode URL Slug</label>
+        <input class="form-input" id="add-slug" placeholder="e.g. lru-cache">
+        <div class="form-hint">From the URL: leetcode.com/problems/<b>lru-cache</b>/</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pattern Group</label>
+        <select class="form-input" id="add-pat" onchange="toggleNewCat(this)"></select>
+      </div>
+      <div id="new-cat-fields" style="display:none">
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">New Category Name</label>
+            <input class="form-input" id="new-cat-name" placeholder="e.g. DFS / BFS">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Color</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="color" id="new-cat-color" value="#00c8ff" style="width:44px;height:38px;background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:2px">
+              <div id="color-presets" style="display:flex;gap:5px;flex-wrap:wrap">
+                <span class="cpre" style="background:#6e5ff5" onclick="setColor('#6e5ff5')"></span>
+                <span class="cpre" style="background:#00e5a0" onclick="setColor('#00e5a0')"></span>
+                <span class="cpre" style="background:#ff5fa0" onclick="setColor('#ff5fa0')"></span>
+                <span class="cpre" style="background:#ffaa00" onclick="setColor('#ffaa00')"></span>
+                <span class="cpre" style="background:#00c8ff" onclick="setColor('#00c8ff')"></span>
+                <span class="cpre" style="background:#e17055" onclick="setColor('#e17055')"></span>
+                <span class="cpre" style="background:#a29bfe" onclick="setColor('#a29bfe')"></span>
+                <span class="cpre" style="background:#55efc4" onclick="setColor('#55efc4')"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeAdd()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmAdd()">Add Problem</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="modal-bg confirm-modal" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">🗑️ Delete Problem?</div>
+      <button class="modal-x" onclick="closeConfirm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-msg">Are you sure you want to delete <span class="confirm-name" id="confirm-name"></span>? This action cannot be undone.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-danger" onclick="executeDelete()">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- SOLVED LIST MODAL -->
+<div class="modal-bg" id="solved-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head">
+      <div class="modal-title">✅ Solved Problems (<span id="solved-modal-count">0</span>)</div>
+      <button class="modal-x" onclick="closeSolvedModal()">✕</button>
+    </div>
+    <div class="modal-body" id="solved-modal-body" style="max-height:70vh"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settingsModal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 class="modal-title">⚙️ GitHub Automation Config</h3>
+      <button class="modal-x" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">How Your Data Works</label>
+        <div class="form-hint" style="line-height:2">
+          🔗 <b>Sign in with Google</b> to sync everything across all your devices<br>
+          ➕ <b>Add problems</b> — saved privately to your Google Drive<br>
+          🗑️ <b>Delete problems</b> — only affects your list, nobody else<br>
+          📝 <b>Notes &amp; cheatsheets</b> — 100% private to your account<br>
+          ✓ <b>Solved status</b> — private to your Google account<br><br>
+          <span style="color:var(--easy)">✅ Everyone gets their own independent tracker.</span><br>
+          <span style="color:var(--text3)">No GitHub token needed. Just sign in with Google.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
+      <button class="btn-confirm" onclick="saveSettings()">Save Token</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  DEFAULT DATA
+// ═══════════════════════════════════════════════
+// No default patterns — each user starts with their own empty list
+const DEFAULT_PATTERNS = [];
+
+// ═══════════════════════════════════════════════
+//  GOOGLE DRIVE SYNC
+// ═══════════════════════════════════════════════
+const DRIVE_FILE_NAME = 'leettrack-data.json';
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+const SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+const CLIENT_ID = '738510381984-g4t0abp59738vdsmt3vdtg9mbcj4onhb.apps.googleusercontent.com';
+const API_KEY   = 'AIzaSyAHT_46-Ho02yuzBRsccWkSsz3XyQKRVpQ';
+
+let gapiReady = false, tokenClient, driveFileId = null, syncTimer = null;
+let currentUserEmail = null;
+
+/* ── UI helpers ── */
+function setSyncState(state, label) {
+  const btn = document.getElementById('sync-btn');
+  const ico = document.getElementById('sync-icon');
+  const lbl = document.getElementById('sync-label');
+  btn.className = 'sync-btn ' + (state||'');
+  if(lbl) lbl.textContent = label || 'Drive';
+  if(state==='syncing') ico.textContent='↻';
+  else if(state==='synced') ico.textContent='✓';
+  else if(state==='error') ico.textContent='⚠';
+  else ico.textContent='☁';
+}
+
+function updateAuthUI(signedIn, userInfo) {
+  const btn = document.getElementById('gauth-btn');
+  const ico = document.getElementById('gauth-icon');
+  const lbl = document.getElementById('gauth-label');
+  if(signedIn && userInfo) {
+    btn.className = 'gauth-btn signed-in';
+    if(userInfo.picture) {
+      ico.innerHTML = `<img src="${userInfo.picture}" class="gauth-avatar" onerror="this.style.display='none'">`;
+    } else {
+      ico.textContent = '✅';
+    }
+    const name = userInfo.given_name || userInfo.name || userInfo.email || 'Signed In';
+    lbl.textContent = name.length > 12 ? name.substring(0,11)+'…' : name;
+    btn.title = `Signed in as ${userInfo.email}\nClick to switch / sign out`;
+    currentUserEmail = userInfo.email;
+  } else {
+    btn.className = 'gauth-btn';
+    ico.innerHTML = '🔗';
+    lbl.textContent = 'Sign In';
+    btn.title = 'Sign in with Google to sync across devices';
+    currentUserEmail = null;
+  }
+}
+
+/* ── GAPI bootstrap ── */
+async function initGapi() {
+  await new Promise(r => gapi.load('client', r));
+  await gapi.client.init({ apiKey: API_KEY, discoveryDocs: [DISCOVERY_DOC] });
+  await gapi.client.load('drive', 'v3');
+  gapiReady = true;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if(resp.error) { setSyncState('error','Auth error'); return; }
+      const tok = gapi.client.getToken();
+      if(tok) {
+        localStorage.setItem('lt-goog-token', JSON.stringify({...tok, expires_at: Date.now()+3500000}));
+        const userInfo = await fetchUserInfo(tok.access_token);
+        updateAuthUI(true, userInfo);
+        await syncFromDrive();
+      }
+    }
+  });
+  // Try restoring saved token
+  const stored = localStorage.getItem('lt-goog-token');
+  if(stored) {
+    try {
+      const t = JSON.parse(stored);
+      if(Date.now() < t.expires_at - 60000) {
+        gapi.client.setToken(t);
+        const userInfo = await fetchUserInfo(t.access_token);
+        updateAuthUI(true, userInfo);
+        await syncFromDrive();
+        return;
+      }
+    } catch(e) { console.error("Token restore error", e); }
+  }
+  updateAuthUI(false);
+  setSyncState('', 'Drive');
+}
+
+async function fetchUserInfo(accessToken) {
+  try {
+    const r = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    return r.ok ? await r.json() : null;
+  } catch(e) { return null; }
+}
+
+function handleAuthClick() {
+  if(!gapiReady) { setSyncState('error','Loading…'); return; }
+  const tok = gapi.client.getToken();
+  if(tok) {
+    // Show sign out / switch account menu
+    showAccountMenu();
+  } else {
+    requestAuth(false);
+  }
+}
+
+function showAccountMenu() {
+  const existing = document.getElementById('account-menu');
+  if(existing) { existing.remove(); return; }
+  const menu = document.createElement('div');
+  menu.id = 'account-menu';
+  menu.style.cssText = `position:fixed;top:60px;right:16px;background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:8px;z-index:999;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,.5)`;
+  menu.innerHTML = `
+    <div style="padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:6px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:2px">Signed in as</div>
+      <div style="font-size:12px;color:var(--text);font-weight:600">${currentUserEmail||'Google Account'}</div>
+    </div>
+    <button onclick="switchAccount()" style="width:100%;background:none;border:none;color:var(--text2);font-family:var(--mono);font-size:12px;padding:7px 10px;text-align:left;cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:8px">
+      🔄 Switch Account
+    </button>
+    <button onclick="signOut()" style="width:100%;background:none;border:none;color:var(--hard);font-family:var(--mono);font-size:12px;padding:7px 10px;text-align:left;cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:8px">
+      🚪 Sign Out
+    </button>
+  `;
+  document.body.appendChild(menu);
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', function close(e) {
+      if(!menu.contains(e.target) && e.target.id !== 'gauth-btn') {
+        menu.remove(); document.removeEventListener('click', close);
+      }
+    });
+  }, 50);
+}
+
+function requestAuth(forceSelect) {
+  if(!gapiReady) return;
+  driveFileId = null; // reset file id for new account
+  tokenClient.requestAccessToken({ prompt: forceSelect ? 'select_account' : '' });
+}
+
+function switchAccount() {
+  const menu = document.getElementById('account-menu');
+  if(menu) menu.remove();
+  // Clear token so new auth starts fresh with account picker
+  gapi.client.setToken(null);
+  localStorage.removeItem('lt-goog-token');
+  driveFileId = null;
+  updateAuthUI(false);
+  requestAuth(true);
+}
+
+function signOut() {
+  const menu = document.getElementById('account-menu');
+  if(menu) menu.remove();
+  const tok = gapi.client.getToken();
+  if(tok) {
+    google.accounts.oauth2.revoke(tok.access_token, ()=>{});
+  }
+  gapi.client.setToken(null);
+  localStorage.removeItem('lt-goog-token');
+  driveFileId = null;
+  updateAuthUI(false);
+  setSyncState('', 'Drive');
+}
+
+/* ── Find or create the app-data file ── */
+async function getOrCreateFile() {
+  if(driveFileId) return driveFileId;
+  const list = await gapi.client.drive.files.list({
+    spaces: 'appDataFolder',
+    q: `name='${DRIVE_FILE_NAME}'`,
+    fields: 'files(id)',
+    pageSize: 1
+  });
+  if(list.result.files.length > 0) {
+    driveFileId = list.result.files[0].id;
+  } else {
+    const created = await gapi.client.drive.files.create({
+      resource: { name: DRIVE_FILE_NAME, parents: ['appDataFolder'] },
+      fields: 'id'
+    });
+    driveFileId = created.result.id;
+  }
+  return driveFileId;
+}
+
+/* ── Read from Drive ── */
+async function syncFromDrive() {
+  setSyncState('syncing', 'Syncing…');
+  try {
+    const fid = await getOrCreateFile();
+    const resp = await gapi.client.drive.files.get({ fileId: fid, alt: 'media' });
+    if(resp.body && resp.body.length > 2) {
+      const data = JSON.parse(resp.body);
+      // Drive is the FULL personal database — patterns + notes + solved
+      if(data.notes)    notes    = data.notes;
+      if(data.solved)   solved   = new Set(data.solved);
+      if(data.patterns && Array.isArray(data.patterns)) {
+        patterns = data.patterns;
+        localStorage.setItem('lt-patterns', JSON.stringify(patterns));
+      }
+      localStorage.setItem('lt-notes',  JSON.stringify(notes));
+      localStorage.setItem('lt-solved', JSON.stringify([...solved]));
+      renderSidebar(); renderContent(); updateStats();
+    }
+    setSyncState('synced', 'Synced ✓');
+    setTimeout(()=>setSyncState('','Drive'), 3000);
+    const tok = gapi.client.getToken();
+    if(tok) localStorage.setItem('lt-goog-token', JSON.stringify({...tok, expires_at: Date.now()+3500000}));
+  } catch(e) {
+    console.error('Drive read error', e);
+    setSyncState('error', 'Sync failed');
+    setTimeout(()=>setSyncState('','Drive'), 4000);
+  }
+}
+
+/* ── Write to Drive (debounced 1.5s) ── */
+function scheduleDriveWrite() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(writeToDrive, 1500);
+}
+
+async function writeToDrive() {
+  if(!gapiReady || !gapi.client.getToken()) return;
+  setSyncState('syncing', 'Saving…');
+  try {
+    const fid = await getOrCreateFile();
+    // Save EVERYTHING to Drive — patterns + notes + solved (full personal database)
+    const payload = JSON.stringify({ patterns, notes, solved:[...solved] });
+    await gapi.client.request({
+      path: `/upload/drive/v3/files/${fid}`,
+      method: 'PATCH',
+      params: { uploadType: 'media' },
+      body: payload
+    });
+    setSyncState('synced', 'Saved ✓');
+    setTimeout(()=>setSyncState('','Drive'), 2500);
+  } catch(e) {
+    console.error('Drive write error', e);
+    setSyncState('error', 'Save failed');
+  }
+}
+
+function manualSync() {
+  if(!gapiReady) { setSyncState('error','Loading…'); return; }
+  const tok = gapi.client.getToken();
+  if(!tok) { requestAuth(false); }
+  else { syncFromDrive(); }
+}
+
+// ═══════════════════════════════════════════════
+//  GITHUB AUTO-SYNC
+// ═══════════════════════════════════════════════
+const REPO_OWNER = 'sadabala30';
+const REPO_NAME  = 'LeetTrack';
+const FILE_PATH  = 'problems.json';
+const GH_RAW_URL = `https://sadabala30.github.io/LeetTrack/problems.json`;
+
+async function pushToGitHub(updatedPatterns) {
+  const GITHUB_TOKEN = localStorage.getItem('gh_token');
+  if (!GITHUB_TOKEN) {
+    console.warn('No GitHub token set. Open ⚙️ Settings to add your token so changes sync to GitHub.');
+    return;
+  }
+  try {
+    const getFileResponse = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if(!getFileResponse.ok) throw new Error(`GitHub GET failed: ${getFileResponse.status}`);
+    const fileData = await getFileResponse.json();
+    const sha = fileData.sha;
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(updatedPatterns, null, 2))));
+    const putResp = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
+      body: JSON.stringify({
+        message: `LeetTrack: auto-update ${new Date().toLocaleString()}`,
+        content: content,
+        sha: sha
+      })
+    });
+    if(!putResp.ok) throw new Error(`GitHub PUT failed: ${putResp.status}`);
+    console.log("✅ GitHub problems.json updated!");
+    setSyncState('synced', 'GitHub ✓');
+    setTimeout(()=>setSyncState('','Drive'), 3000);
+  } catch(e) {
+    console.error("GitHub Sync Error:", e);
+    setSyncState('error', 'GitHub ✗');
+    setTimeout(()=>setSyncState('','Drive'), 4000);
+  }
+}
+
+/* ── Fetch latest patterns from GitHub (with cache-bust) ── */
+async function fetchPatternsFromGitHub() {
+  try {
+    const resp = await fetch(`${GH_RAW_URL}?_=${Date.now()}`);
+    if(resp.ok) return await resp.json();
+  } catch(e) {}
+  return null;
+}
+
+/* ── Auto-refresh: check GitHub every 2 minutes — MERGE only ── */
+async function autoRefreshFromGitHub() {
+  const fresh = await fetchPatternsFromGitHub();
+  if (!fresh || !Array.isArray(fresh)) return;
+  const localIds = new Set(patterns.flatMap(p => p.problems.map(pr => pr.id)));
+  let changed = false;
+  fresh.forEach(ghCat => {
+    let localCat = patterns.find(p => p.name === ghCat.name);
+    if (!localCat) {
+      patterns.push({...ghCat, problems: [...ghCat.problems]});
+      ghCat.problems.forEach(pr => localIds.add(pr.id));
+      changed = true;
+    } else {
+      ghCat.problems.forEach(ghPr => {
+        if (!localIds.has(ghPr.id)) {
+          localCat.problems.push(ghPr);
+          localIds.add(ghPr.id);
+          changed = true;
+        }
+      });
+    }
+  });
+  if (changed) {
+    localStorage.setItem('lt-patterns', JSON.stringify(patterns));
+    renderSidebar(); renderContent(); updateStats();
+    console.log('🔄 Merged new problems from GitHub');
+  }
+}
+
+// ─── Settings modal ───
+function openSettings() {
+  const savedToken = localStorage.getItem('gh_token');
+  if (savedToken) document.getElementById('ghTokenInput').value = savedToken;
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
+function saveSettings() {
+  const token = document.getElementById('ghTokenInput').value.trim();
+  if (token) {
+    localStorage.setItem('gh_token', token);
+    alert("✅ GitHub Token saved! New problems will now sync to GitHub.");
+    closeSettings();
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let patterns, notes, solved, activePattern='all', diffFilter='all';
+
+function save() {
+  localStorage.setItem('lt-patterns', JSON.stringify(patterns));
+  localStorage.setItem('lt-notes',    JSON.stringify(notes));
+  localStorage.setItem('lt-solved',   JSON.stringify([...solved]));
+  try {
+    if(gapiReady && gapi.client.getToken()) scheduleDriveWrite();
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════
+function updateStats() {
+  const all = patterns.flatMap(p=>p.problems);
+  const total = all.length;
+  const easy  = all.filter(p=>p.diff==='Easy').length;
+  const med   = all.filter(p=>p.diff==='Medium').length;
+  const hard  = all.filter(p=>p.diff==='Hard').length;
+  const solvedN = solved.size;
+  const pct = total ? Math.round(solvedN/total*100) : 0;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-easy').textContent  = easy;
+  document.getElementById('s-med').textContent   = med;
+  document.getElementById('s-hard').textContent  = hard;
+  document.getElementById('s-solved').textContent = solvedN;
+  document.getElementById('h-total').textContent = total;
+  document.getElementById('h-easy').textContent  = easy;
+  document.getElementById('h-med').textContent   = med;
+  document.getElementById('h-hard').textContent  = hard;
+  document.getElementById('h-solved').textContent = solvedN;
+  document.getElementById('sb-solved-cnt').textContent = solvedN;
+  document.getElementById('progress-bar').style.width = pct+'%';
+  document.getElementById('progress-pct').textContent = pct+'% solved';
+}
+
+// ═══════════════════════════════════════════════
+//  MOBILE SIDEBAR
+// ═══════════════════════════════════════════════
+function toggleMobileSidebar() {
+  const sb = document.getElementById('main-sidebar');
+  const bd = document.getElementById('sb-backdrop');
+  const isOpen = sb.classList.toggle('mobile-open');
+  bd.classList.toggle('active', isOpen);
+}
+function closeMobileSidebar() {
+  document.getElementById('main-sidebar').classList.remove('mobile-open');
+  document.getElementById('sb-backdrop').classList.remove('active');
+}
+
+// ═══════════════════════════════════════════════
+//  SIDEBAR
+// ═══════════════════════════════════════════════
+function renderSidebar() {
+  const q  = document.getElementById('sb-search').value.toLowerCase();
+  const sb = document.getElementById('sb-patterns');
+  sb.innerHTML = '';
+  const total = patterns.reduce((a,p)=>a+p.problems.length,0);
+  document.getElementById('sb-all-cnt').textContent = total;
+  patterns.forEach(p => {
+    if(q && !p.name.toLowerCase().includes(q)) return;
+    const btn = document.createElement('button');
+    btn.className = 'sb-btn' + (activePattern===p.name?' active':'');
+    btn.innerHTML = `<span class="sb-btn-inner"><span class="sb-dot" style="background:${p.color}"></span><span class="sb-name">${p.name}</span></span><span class="sb-cnt">${p.problems.length}</span>`;
+    btn.onclick = () => { setPattern(p.name, btn); closeMobileSidebar(); };
+    sb.appendChild(btn);
+  });
+}
+
+function setPattern(name, btn) {
+  activePattern = name;
+  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const title = name==='all' ? 'All Problems' : name==='__solved__' ? '✅ Solved Problems' : name;
+  document.getElementById('content-title').textContent = title;
+  renderContent();
+}
+
+// ═══════════════════════════════════════════════
+//  CONTENT
+// ═══════════════════════════════════════════════
+function setDiff(d, btn) {
+  diffFilter = d;
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderContent();
+}
+
+function renderContent() {
+  const body = document.getElementById('content-body');
+  body.innerHTML = '';
+
+  // ── SOLVED VIEW ──
+  if(activePattern === '__solved__') {
+    renderSolvedView(body);
+    return;
+  }
+
+  const pats = activePattern==='all' ? patterns : patterns.filter(p=>p.name===activePattern);
+  let totalShown = 0;
+  pats.forEach(p => {
+    const probs = diffFilter==='all' ? p.problems : p.problems.filter(pr=>pr.diff===diffFilter);
+    if(!probs.length) return;
+    totalShown += probs.length;
+    const solvedInGroup = probs.filter(pr=>solved.has(pr.id)).length;
+    const grp = document.createElement('div');
+    grp.className = 'pat-group';
+    grp.innerHTML = `
+      <div class="pat-group-header" style="background:${p.color}20;border-bottom:1px solid ${p.color}30" onclick="toggleGroup(this)">
+        <span style="width:8px;height:8px;border-radius:50%;background:${p.color};flex-shrink:0;display:inline-block"></span>
+        <span class="pat-group-name">${p.name}</span>
+        <span class="pat-solved" style="color:${p.color}">${solvedInGroup}/${probs.length}</span>
+        <span class="pat-chevron open">▼</span>
+      </div>
+      <div class="pat-problems">
+        ${probs.map(pr => probRow(pr, p.name)).join('')}
+      </div>`;
+    body.appendChild(grp);
+  });
+  if(!totalShown) {
+    if(patterns.length === 0) {
+      body.innerHTML = `<div class="empty"><div class="empty-icon">🚀</div><div class="empty-text" style="line-height:2">Welcome! This is your personal tracker.<br><span style="font-size:12px;color:var(--text3)">Click <b style="color:var(--acc)">+ Add</b> to add your first problem.<br>Sign in with Google 🔗 to sync across all your devices.</span></div></div>`;
+    } else {
+      body.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">No problems match this filter</div></div>`;
+    }
+  }
+}
+
+function renderSolvedView(body) {
+  const allProbs = patterns.flatMap(p => p.problems.map(pr => ({...pr, patName:p.name, patColor:p.color})));
+  const solvedProbs = allProbs.filter(pr => solved.has(pr.id));
+  if(solvedProbs.length === 0) {
+    body.innerHTML = `<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">No solved problems yet. Start marking problems as solved!</div></div>`;
+    return;
+  }
+  // Group by difficulty
+  const byDiff = {Easy:[], Medium:[], Hard:[]};
+  solvedProbs.forEach(pr => { byDiff[pr.diff].push(pr); });
+  ['Easy','Medium','Hard'].forEach(d => {
+    if(!byDiff[d].length) return;
+    const diffColor = d==='Easy'?'var(--easy)':d==='Medium'?'var(--med)':'var(--hard)';
+    const grp = document.createElement('div');
+    grp.className = 'pat-group';
+    grp.innerHTML = `
+      <div class="pat-group-header" style="background:${diffColor}18;border-bottom:1px solid ${diffColor}30" onclick="toggleGroup(this)">
+        <span style="width:8px;height:8px;border-radius:50%;background:${diffColor};flex-shrink:0;display:inline-block"></span>
+        <span class="pat-group-name">${d}</span>
+        <span class="pat-solved" style="color:${diffColor}">${byDiff[d].length} solved</span>
+        <span class="pat-chevron open">▼</span>
+      </div>
+      <div class="pat-problems">
+        ${byDiff[d].map(pr => probRow(pr, pr.patName)).join('')}
+      </div>`;
+    body.appendChild(grp);
+  });
+}
+
+function probRow(pr, patName) {
+  const isS = solved.has(pr.id);
+  const n = notes[pr.id] || {};
+  const hasNote = n.note || n.cheat;
+  return `<div class="prob-row${isS?' is-solved':''}" id="row-${pr.id}">
+    <span class="prob-num">${pr.id}</span>
+    <div class="prob-main">
+      <div class="prob-check${isS?' checked':''}" onclick="toggleSolved(${pr.id})" title="Toggle solved">${isS?'✓':''}</div>
+      <a class="prob-link" href="https://leetcode.com/problems/${pr.slug}/" target="_blank">${pr.name}</a>
+    </div>
+    <span class="diff-tag ${pr.diff}">${pr.diff}</span>
+    <button class="note-toggle${hasNote?' active':''}" onclick="toggleNote(${pr.id},'${pr.name.replace(/'/g,"\\'")}')" title="Notes & Cheatsheet">📝</button>
+    <button class="del-btn" onclick="confirmDelete(${pr.id},'${pr.name.replace(/'/g,"\\'")}','${patName.replace(/'/g,"\\'")}')" title="Delete problem">🗑</button>
+  </div>
+  <div class="note-panel" id="note-${pr.id}">
+    <div class="note-panel-inner">
+      <div>
+        <div class="np-label" style="color:var(--acc)">📝 Notes / Approach</div>
+        <textarea class="np-area" id="note-text-${pr.id}" placeholder="Key insight, approach, complexity...">${n.note||''}</textarea>
+      </div>
+      <div>
+        <div class="np-label" style="color:var(--acc2)">⚡ Cheat Sheet</div>
+        <textarea class="np-area cheat" id="note-cheat-${pr.id}" placeholder="Code template or key pattern...">${n.cheat||''}</textarea>
+      </div>
+    </div>
+    <button class="np-save" onclick="saveNote(${pr.id})">Save</button>
+    <span class="np-saved" id="saved-${pr.id}">✓ Saved!</span>
+  </div>`;
+}
+
+function toggleGroup(header) {
+  const probs = header.nextElementSibling;
+  const chev  = header.querySelector('.pat-chevron');
+  const isOpen = !probs.classList.contains('collapsed');
+  probs.classList.toggle('collapsed', isOpen);
+  chev.classList.toggle('open', !isOpen);
+}
+
+function toggleSolved(id) {
+  if(solved.has(id)) solved.delete(id);
+  else solved.add(id);
+  save();
+  renderContent();
+  updateStats();
+}
+
+function toggleNote(id, name) {
+  document.getElementById('note-'+id).classList.toggle('open');
+}
+
+function saveNote(id) {
+  notes[id] = {
+    note:  document.getElementById('note-text-'+id).value,
+    cheat: document.getElementById('note-cheat-'+id).value,
+  };
+  save();
+  const el = document.getElementById('saved-'+id);
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2000);
+}
+
+// ═══════════════════════════════════════════════
+//  DELETE WITH CONFIRMATION
+// ═══════════════════════════════════════════════
+let pendingDelete = null;
+
+function confirmDelete(id, name, patName) {
+  pendingDelete = {id, name, patName};
+  document.getElementById('confirm-name').textContent = `"${name}" (#${id})`;
+  document.getElementById('confirm-modal').classList.add('open');
+}
+
+function closeConfirm() {
+  pendingDelete = null;
+  document.getElementById('confirm-modal').classList.remove('open');
+}
+
+function executeDelete() {
+  if(!pendingDelete) return;
+  const {id, patName} = pendingDelete;
+  // Remove from patterns
+  const pat = patterns.find(p => p.name === patName);
+  if(pat) pat.problems = pat.problems.filter(pr => pr.id !== id);
+  // Remove from solved & notes
+  solved.delete(id);
+  delete notes[id];
+  save();
+  closeConfirm();
+  renderSidebar();
+  renderContent();
+  updateStats();
+}
+
+document.getElementById('confirm-modal').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeConfirm(); });
+
+// ═══════════════════════════════════════════════
+//  SOLVED LIST MODAL
+// ═══════════════════════════════════════════════
+function openSolvedList() {
+  const allProbs = patterns.flatMap(p => p.problems.map(pr => ({...pr, patName:p.name, patColor:p.color})));
+  const solvedProbs = allProbs.filter(pr => solved.has(pr.id));
+  solvedProbs.sort((a,b) => a.id - b.id);
+
+  document.getElementById('solved-modal-count').textContent = solvedProbs.length;
+  const body = document.getElementById('solved-modal-body');
+
+  if(solvedProbs.length === 0) {
+    body.innerHTML = `<div class="solved-empty">No solved problems yet!<br>Start clicking ✓ to mark problems solved.</div>`;
+  } else {
+    const diffColor = d => d==='Easy'?'var(--easy)':d==='Medium'?'var(--med)':'var(--hard)';
+    body.innerHTML = `<ul class="solved-list">${solvedProbs.map(pr => `
+      <li class="solved-item">
+        <a href="https://leetcode.com/problems/${pr.slug}/" target="_blank">#${pr.id} ${pr.name}</a>
+        <div class="solved-item-meta">
+          <span style="color:${pr.patColor};font-size:10px">${pr.patName}</span>
+          <span class="diff-tag ${pr.diff}" style="font-size:9px;padding:2px 7px">${pr.diff}</span>
+        </div>
+      </li>`).join('')}</ul>`;
+  }
+  document.getElementById('solved-modal').classList.add('open');
+}
+
+function closeSolvedModal() {
+  document.getElementById('solved-modal').classList.remove('open');
+}
+
+document.getElementById('solved-modal').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeSolvedModal(); });
+
+// ═══════════════════════════════════════════════
+//  ADD PROBLEM MODAL
+// ═══════════════════════════════════════════════
+function openAdd() {
+  const sel = document.getElementById('add-pat');
+  sel.innerHTML = patterns.map(p=>`<option>${p.name}</option>`).join('') + `<option value="__new__">➕ Create New Category...</option>`;
+  document.getElementById('add-id').value='';
+  document.getElementById('add-name').value='';
+  document.getElementById('add-slug').value='';
+  document.getElementById('new-cat-name').value='';
+  document.getElementById('new-cat-color').value='#00c8ff';
+  document.getElementById('new-cat-fields').style.display='none';
+  document.getElementById('add-modal').classList.add('open');
+}
+function closeAdd() { document.getElementById('add-modal').classList.remove('open'); }
+document.getElementById('add-modal').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeAdd(); });
+
+function toggleNewCat(sel) {
+  document.getElementById('new-cat-fields').style.display = sel.value==='__new__' ? 'block' : 'none';
+}
+
+function setColor(hex) {
+  document.getElementById('new-cat-color').value = hex;
+}
+
+function confirmAdd() {
+  const id   = parseInt(document.getElementById('add-id').value);
+  const name = document.getElementById('add-name').value.trim();
+  const diff = document.getElementById('add-diff').value;
+  const slug = document.getElementById('add-slug').value.trim().replace(/^\/|\/$/g,'').replace('https://leetcode.com/problems/','').replace(/\/$/,'');
+  let patName = document.getElementById('add-pat').value;
+
+  if(!id||!name||!slug) { alert('Please fill in all required fields!'); return; }
+  // Check for duplicate ID
+  const allIds = patterns.flatMap(p=>p.problems.map(pr=>pr.id));
+  if(allIds.includes(id)) { alert(`Problem #${id} already exists!`); return; }
+
+  if(patName === '__new__') {
+    const newName  = document.getElementById('new-cat-name').value.trim();
+    const newColor = document.getElementById('new-cat-color').value;
+    if(!newName) { alert('Please enter a category name!'); return; }
+    if(patterns.find(p=>p.name===newName)) { alert('Category already exists!'); return; }
+    patterns.push({name:newName, color:newColor, problems:[]});
+    patName = newName;
+  }
+
+  const p = patterns.find(x=>x.name===patName);
+  if(p) p.problems.push({id, name, diff, slug});
+
+  save();
+  closeAdd();
+  renderSidebar();
+  renderContent();
+  updateStats();
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+async function initLoad() {
+  // Load personal data from localStorage (instant, offline)
+  try { notes  = JSON.parse(localStorage.getItem('lt-notes'))  || {}; } catch { notes = {}; }
+  try { solved = new Set(JSON.parse(localStorage.getItem('lt-solved')) || []); } catch { solved = new Set(); }
+  try {
+    const lp = JSON.parse(localStorage.getItem('lt-patterns'));
+    patterns = (lp && Array.isArray(lp)) ? lp : [];
+  } catch { patterns = []; }
+
+  // Render immediately (may be empty for new users — that's correct)
+  renderSidebar(); renderContent(); updateStats();
+
+  // NOTE: No GitHub merge here. GitHub problems.json is NOT used anymore.
+  // Each user's full list lives in their Google Drive.
+  // When they sign into Google, syncFromDrive() loads their personal list.
+}
+
+initLoad();
+</script>
+
+<!-- Google APIs for Drive sync -->
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client" onload="initGapi()"></script>
+</body>
+</html>
